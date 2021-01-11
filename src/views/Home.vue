@@ -13,7 +13,10 @@
       v-for="(pokemon, idx) in filtredPokemon"
       :key="idx"
     >
-      <router-link :to="`/about/${idx + 1}`">
+      <router-link
+        class="no-underline"
+        :to="`/about/${urlIdLookup[pokemon.name]}`"
+      >
         {{ pokemon.name }}
       </router-link>
     </div>
@@ -21,8 +24,6 @@
 </template>
 
 <script>
-// @ is an alias to /src
-
 import { reactive, toRefs, computed } from "vue";
 
 export default {
@@ -30,7 +31,7 @@ export default {
   setup() {
     const state = reactive({
       pokemons: [],
-      urlIdLookups: {},
+      urlIdLookup: {},
       text: "",
       filtredPokemon: computed(() => updatePokemon()),
     });
@@ -43,16 +44,29 @@ export default {
         pokemon.name.includes(state.text)
       );
     }
-    fetch("https://pokeapi.co/api/v2/pokemon?offset=0")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        state.pokemons = data.results;
-        state.urlIdLookups = data.results.reduce(
-          (acc, cur, idx) => (acc = { ...acc, [cur.name]: idx + 1 }),
-          {}
-        );
-      });
+
+    async function getPokemon() {
+      const res = await fetch("https://pokeapi.co/api/v2/pokemon?offset=0");
+      const data = await res.json();
+      state.pokemons = data.results;
+      state.urlIdLookup = data.results.reduce(
+        (acc, cur, idx) => (acc = { ...acc, [cur.name]: idx + 1 }),
+        {}
+      );
+    }
+
+    getPokemon();
+
+    // fetch("https://pokeapi.co/api/v2/pokemon?offset=0")
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     console.log(data);
+    //     state.pokemons = data.results;
+    //     state.urlIdLookup = data.results.reduce(
+    //       (acc, cur, idx) => (acc = { ...acc, [cur.name]: idx + 1 }),
+    //       {}
+    //     );
+    //   });
     return { ...toRefs(state) };
   },
 };
